@@ -1,0 +1,24 @@
+[package]
+name = "glium-sdl2-hack"
+version = "0.1.0"
+authors = ["Shane Pearman <spearman@github.com>"]
+
+[dependencies]
+
+[dependencies.glium]
+version = "0.19.*"
+git = "git://github.com/spearman/glium.git"
+branch = "hack"
+# do not enable any features by default, as to not bring in unwanted dependencies
+features = []
+default-features = false
+
+[dependencies.sdl2]
+version = "0.31.*"
+git = "git://github.com/spearman/rust-sdl2.git"
+branch = "hack"
+
+[dependencies.sdl2-sys]
+version = "0.31.*"
+git = "git://github.com/spearman/rust-sdl2.git"
+branch = "hack"
