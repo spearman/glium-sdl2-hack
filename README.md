@@ -3,8 +3,8 @@
 > An [**unsafe**](#unsafety) backend for SDL + Glium that makes it possible to
 > collect input events on the main thread while rendering on a child thread.
 
-&#x261e; For a *safe* and *portable* solution, [use glutin
-instead](#use-glutin-instead)
+&#x261e; **For a *safe* and *portable* solution, [use glutin
+instead](#use-glutin-instead)**
 
 [Documentation](https://spearman.github.io/glium-sdl2-hack/glium_sdl2_hack/index.html)
 
