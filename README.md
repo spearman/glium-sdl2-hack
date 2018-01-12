@@ -3,6 +3,9 @@
 > An [**unsafe**](#unsafety) backend for SDL + Glium that makes it possible to
 > collect input events on the main thread while rendering on a child thread.
 
+&#x261e; For a *safe* and *portable* solution, [use glutin
+instead](#use-glutin-instead)
+
 [Documentation](https://spearman.github.io/glium-sdl2-hack/glium_sdl2_hack/index.html)
 
 Relies on modified `glium` and `sdl2` libraries to achieve the following
@@ -157,6 +160,96 @@ indirectly through the `Display::window` method, but it is not possible to
 create a window on a thread other than main, so the
 `sdl2::VideoSubsystem::window` method to build a new window **should not be
 called from a child thread**.
+
+## Use glutin instead
+
+The default backend for Glium provided by glutin actually allows decoupled
+input and rendering, provided you use a polled event loop rather than waiting
+on events:
+
+```rust
+extern crate glium;
+use glium::glutin;
+
+static RUNNING : std::sync::atomic::AtomicBool
+  = std::sync::atomic::ATOMIC_BOOL_INIT;
+fn main () {
+  RUNNING.store (true, std::sync::atomic::Ordering::SeqCst);
+
+  let mut events_loop = glutin::EventsLoop::new();
+  // create gl window which can be sent to another thread
+  let gl_window   = glutin::GlWindow::new (
+    glutin::WindowBuilder::new()
+      .with_title ("my window")
+      .with_dimensions (320, 240),
+    glutin::ContextBuilder::new(),
+    &events_loop
+  ).unwrap();
+
+  let input_thread  = std::thread::current();
+
+  // spawn render thread
+  let render_handle = std::thread::spawn (move || {
+    // create glium display
+    let glium_display = glium::Display::from_gl_window (gl_window).unwrap();
+
+    input_thread.unpark();
+
+    // frame loop
+    let mut frame = 0;
+    'frameloop: while RUNNING.load (std::sync::atomic::Ordering::SeqCst) {
+      use glium::Surface;
+
+      if frame % 60 == 0 {
+        println!("frame: {}", frame);
+      }
+
+      let mut glium_frame = glium_display.draw();
+      if 50 < frame % 100 {
+        glium_frame.clear_all ((1.0, 0.0, 0.0, 1.0), 0.0, 0);
+      } else {
+        glium_frame.clear_all ((0.0, 1.0, 0.0, 1.0), 0.0, 0);
+      }
+      glium_frame.finish().unwrap();
+
+      frame += 1;
+    }
+  }); // end spawn render thread
+
+  std::thread::park();
+
+  // poll glutin input events
+  let mut running = true;
+  while running {
+    events_loop.poll_events (|event| {
+      println!("event: {:?}", event);
+      match event {
+        glutin::Event::WindowEvent { event, .. } => {
+          match event {
+            glutin::WindowEvent::KeyboardInput { input, .. } => {
+              if let Some (virtual_keycode) = input.virtual_keycode {
+                match virtual_keycode {
+                  glutin::VirtualKeyCode::Q | glutin::VirtualKeyCode::Escape => {
+                    RUNNING.store (false, std::sync::atomic::Ordering::SeqCst);
+                    running = false;
+                  }
+                  _ => {}
+                } // end match virtual keycode
+              }
+            }
+            _ => {}
+          } // end match window event
+        }
+        _ => {}
+      } // end match glutin event
+    }); // end glutin input events
+    // sleep for a short duration
+    std::thread::sleep (std::time::Duration::from_millis (1));
+  }
+
+  render_handle.join().unwrap();
+}
+```
 
 ## FAQ
 
