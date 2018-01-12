@@ -214,7 +214,7 @@ fn main () {
 
       frame += 1;
     }
-  }); // end spawn render thread
+  });
 
   std::thread::park();
 
@@ -234,15 +234,15 @@ fn main () {
                     running = false;
                   }
                   _ => {}
-                } // end match virtual keycode
+                }
               }
             }
             _ => {}
-          } // end match window event
+          }
         }
         _ => {}
-      } // end match glutin event
-    }); // end glutin input events
+      }
+    });
     // sleep for a short duration
     std::thread::sleep (std::time::Duration::from_millis (1));
   }
