@@ -153,9 +153,10 @@ be ensured that the original video subsystem that spawned the window does not
 drop before the acquired window.*
 
 It is also possible to acquire a "fake" reference to the `sdl2::VideoSubsystem`
-indirectly through the `Display::window` method, it is not possible to create a
-window on a thread other than main, so the `sdl2::VideoSubsystem::window`
-method to build a new window **should not be called from a child thread**.
+indirectly through the `Display::window` method, but it is not possible to
+create a window on a thread other than main, so the
+`sdl2::VideoSubsystem::window` method to build a new window **should not be
+called from a child thread**.
 
 ## FAQ
 
